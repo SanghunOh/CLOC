@@ -2,7 +2,7 @@ CC=g++
 CXXFLAGS=-g -Wall
 LDFLAGS=-lstdc++fs
 TARGET=cloc
-OBJS= main.o Language.o
+OBJS= main.o Language.o LanguageDB.o
 
 all: $(TARGET)
 

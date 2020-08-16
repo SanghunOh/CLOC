@@ -1,17 +1,20 @@
 #include    <iostream>
 #include    <string>
-#include	<vector>
 #include	<fstream>
-#include	<queue>
 #include    <experimental/filesystem>
+
 #include	"Language.h"
+#include	"LanguageDB.h"
 namespace fs = std::experimental::filesystem;
 
-void readFile(const fs::directory_entry entry, std::string& content);
+int readFile(const fs::directory_entry entry, std::string& content);
 bool does_exist(fs::path p);
 bool count_lines_of_code(fs::path target_path);
+int files_ignored;
+int text_files;
 
-std::priority_queue<Language> cloc_langs;
+std::vector<Language*> cloc_langs;
+
 
 int main(int argc, char* argv[]){
 	if(argc < 2){
@@ -29,26 +32,28 @@ int main(int argc, char* argv[]){
 	fs::path target_path(path);
 	
 	if(count_lines_of_code(target_path)){
-		Language::print_output();
+		Language::print_output(text_files, files_ignored);
 	}
 	
 	return 0;
 }
 
 //파일 내용 읽어오기
-void readFile(const fs::directory_entry entry, std::string& content){
+int readFile(const fs::directory_entry entry, std::string& content){
 	if(fs::is_empty(entry)){
-		return;
+		files_ignored++;
+		return 0;
 	}
 	if(fs::is_directory(entry)){
-		return;
+		return -1;
 	}
+	
+	text_files++;
 	
 	std::ifstream fp(entry.path());
 	if(fp.is_open()){
 		fp.seekg(0, std::ios::end);
 		int size = fp.tellg();
-		std::cout << "size : " << size << std::endl;
 		content.resize(size);
 		
 		fp.seekg(0, std::ios::beg);
@@ -59,7 +64,7 @@ void readFile(const fs::directory_entry entry, std::string& content){
 		std::cout << "There is no file\n";
 	}
 	
-	return;
+	return 1;
 }
 
 //파일이 존재하는 지 확인
@@ -81,10 +86,22 @@ bool count_lines_of_code(fs::path target_path){
 	
 	for(const fs::directory_entry entry : fs::recursive_directory_iterator(target_path)){
 		std::string content;
-		readFile(entry, content);
+		std::vector<std::string> lines;
+		int state = readFile(entry, content);
+		if(state == 0){
+			Language::files_sum++;
+			continue;
+		}
+		else if(state == -1){
+			continue;
+		}
 		
-		Language::parse_string(entry, content);
+		Language::parse_string_by_lines(content, lines);
+		
+		for(const std::string s : lines){
+			Language::parse_line(entry.path(), s);
+		}
 	}
 	
-	return false;
+	return true;
 }

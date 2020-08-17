@@ -1,6 +1,8 @@
 #include    <iostream>
 #include    <experimental/filesystem>
+#include	<iomanip>
 #include    "Language.h"
+#include	"LanguageDB.h"
 namespace fs = std::experimental::filesystem;
 
 //define static variables;
@@ -10,17 +12,121 @@ int Language::comment_sum = 0;
 int Language::code_sum = 0;
 int Language::words_sum = 0;
 
+extern std::vector<Language*> cloc_langs;
+
 //결과 출력함수
-void Language::print_output(){
-	printf("--------------------------------------------------------------------\n");
-	printf("Language%20s%10s%10s%10s%10s\n", "files", "blank", "comment", "code", "words");
-	printf("--------------------------------------------------------------------\n");
+void Language::print_output(int text_files, int files_ignored){
+	printf("%d text files\n", text_files);
+	printf("%d filse ignored\n", files_ignored);
+	printf("----------------------------------------------------------\n");
+	printf("Language%20s%10s%10s%10s\n", "files", "blank", "comment", "code");
+	printf("----------------------------------------------------------\n");
+	
+	for(const auto& l : cloc_langs){
+		std::cout << l->get_language_name();
+		
+		std::cout.width(18);
+		std::cout << std::right << l->get_files();
+		
+		std::cout.width(10);
+		std::cout << std::right << l->get_blank();
+	
+		std::cout.width(10);
+		std::cout << std::right << l->get_comment();
+		
+		std::cout.width(10);
+		std::cout << std::right << l->get_code();
+		
+		std::cout << std::endl;
+	}
+	
+	printf("----------------------------------------------------------\n");
+	printf("SUM:%24d%10d%10d%10d\n", files_sum, blank_sum, comment_sum, code_sum);
+	printf("----------------------------------------------------------\n");
+	
 	
 }
 
-//
-void Language::parse_string(fs::directory_entry entry, std::string content){
+std::string Language::find_lang(std::string ext){
+	for(int i=0 ; i<159 ; i++){
+		for(int j=0 ; j<10 ; j++){
+			if(Langs_exts[i][j].empty())
+				break;
+			if(ext == Langs_exts[i][j])
+				return Langs[i];
+		}
+	}
 	
+	return "";
+}
+
+int Language::find_lang_instace_exsits(std::string lang){
+	for(unsigned int i=0 ; i<cloc_langs.size() ; i++){
+		if(lang == cloc_langs[i]->get_language_name())
+			return i;
+	}
+	return -1;
+}
+
+void Language::parse_line(fs::path p, std::string content){
+	std::string lang = find_lang(p.extension().string().substr(1));
+	int index1;
+	int index2;
+	
+	if(lang.empty()){
+		return;	
+	}
+
+	Language* tmp;
+	
+	if((index1 = find_lang_instace_exsits(lang)) != -1)
+		tmp = cloc_langs[index1];
+	else
+		tmp = new Language(lang);
+	
+	tmp->set_files(tmp->get_files() + 1);
+	
+	if(content == "\n")
+		tmp->set_blank(tmp->get_blank() + 1);
+	else if((index2 = content.find("//")) != -1){
+		if(content.substr(0, index2-1).empty())
+			tmp->set_comment(tmp->get_comment() + 1);
+		else
+			tmp->set_code(tmp->get_code() + 1);
+	}
+	else{
+		tmp->set_code(tmp->get_code() + 1);
+	}
+	if(index1 == -1)
+		cloc_langs.push_back(tmp);
+	
+	return;
+}
+
+//
+void Language::parse_string_by_lines(std::string content, std::vector<std::string>& lines){
+	int cur = 0;
+	
+	while(true){
+		cur = content.find('\n');
+		if(cur == -1){
+			if(!content.empty())
+				lines.push_back(content);
+			break;
+		}
+		std::string tmp_string = content.substr(0, ++cur);
+		content = content.substr(cur);
+		lines.push_back(tmp_string);
+	}
+}
+
+
+std::string Language::get_language_name(){
+	return language_name;
+}
+
+void Language::set_language_name(std::string lang){
+	Language::language_name = lang;
 }
 
 //files 리턴

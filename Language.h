@@ -2,6 +2,7 @@
 #define __LANGUAGE_H__
 
 #include    <experimental/filesystem>
+#include	<deque>
 namespace fs = std::experimental::filesystem;
 //language 클래스
 class Language{
@@ -18,6 +19,13 @@ public:
 	//Language 클래스 생성자
 	Language(std::string language_name) 
 		: language_name(language_name), files(0), blank(0), comment(0), code(0), words(0) {};
+	
+	//get language_name
+	std::string get_language_name();
+	
+	//set language_name
+	void set_language_name(std::string);
+	
 	
 	//static sum properties;
 	//static 들은 꼭 선언과 초기화를 해주어야함
@@ -51,8 +59,11 @@ public:
 	static void set_code_sum(int);
 	static void set_words_sum(int);
 	
-	static void print_output();
-	static void parse_string(fs::directory_entry, std::string);
+	static void print_output(int, int);
+	static void parse_string_by_lines(std::string, std::vector<std::string>&);
+	static void parse_line(fs::path, std::string);
+	static int find_lang_instace_exsits(std::string lang);
+	static std::string find_lang(std::string);
 };
 
 #endif

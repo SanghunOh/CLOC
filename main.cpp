@@ -95,8 +95,10 @@ bool count_lines_of_code(fs::path target_path){
 		else if(state == -1){
 			continue;
 		}
+		if(Language::find_lang(entry.path().extension().string().substr(1)) != ""){
+			Language::parse_string_by_lines(content, lines);
+		}
 		
-		Language::parse_string_by_lines(content, lines);
 		
 		for(const std::string s : lines){
 			Language::parse_line(entry.path(), s);

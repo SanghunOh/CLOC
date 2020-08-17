@@ -23,9 +23,10 @@ void Language::print_output(int text_files, int files_ignored){
 	printf("----------------------------------------------------------\n");
 	
 	for(const auto& l : cloc_langs){
-		std::cout << l->get_language_name();
+		std::cout.width(22);
+		std::cout << std::left << l->get_language_name();
 		
-		std::cout.width(18);
+		std::cout.width(6);
 		std::cout << std::right << l->get_files();
 		
 		std::cout.width(10);

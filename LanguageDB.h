@@ -6,6 +6,6 @@
 
 extern std::string Langs[];
 
-extern std::string Langs_exts[][10];
+extern std::string Langs_exts[][11];
 
 #endif

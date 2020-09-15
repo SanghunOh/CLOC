@@ -48,6 +48,7 @@ int readFile(const fs::directory_entry entry, std::string& content){
 		return -1;
 	}
 	
+//	std::cout << entry.path() << std::endl;
 	text_files++;
 	
 	std::ifstream fp(entry.path());
@@ -74,35 +75,73 @@ bool does_exist(fs::path p){
 
 //cloc 계산
 bool count_lines_of_code(fs::path target_path){
-	if(!does_exist(target_path)){
+	bool multi_line_comments = false;
+	if(!does_exist(target_path)){	//파일 경로 확인 없으면 종료
 		std::cout << "Path doesn't exist\n";
 		return false;
 	}
 
-	if(fs::is_empty(target_path)){
+	if(fs::is_empty(target_path)){	//폴더가 비어있는지 확인 비어있으면 종료
 		std::cout << "Folder is empty\n";
 		return false;
 	}
 	
-	for(const fs::directory_entry entry : fs::recursive_directory_iterator(target_path)){
+	for(const fs::directory_entry entry : fs::recursive_directory_iterator(target_path)){	//폴데 내 파일을 모두 확인
+	
+		if(fs::is_directory(entry))
+			continue;
+	
 		std::string content;
 		std::vector<std::string> lines;
+		int index;
+		std::string lang = Language::find_lang(entry.path().extension().string().substr(1));
 		int state = readFile(entry, content);
+		
 		if(state == 0){
 			Language::files_sum++;
+			Language* tmp;
+		
+			if((index = Language::find_lang_instance_exists(lang)) != -1)
+				tmp = cloc_langs[index];
+			else
+				tmp = new Language(lang);
+				
+			tmp->set_files(tmp->get_files() + 1);
+			
+			if(index == -1){
+				cloc_langs.push_back(tmp);
+			}
+				
 			continue;
 		}
 		else if(state == -1){
 			continue;
 		}
-		if(Language::find_lang(entry.path().extension().string().substr(1)) != ""){
-			Language::parse_string_by_lines(content, lines);
+		else{
+			Language::files_sum++;
+			if(lang.empty())
+				continue;
+			else
+				Language::parse_string_by_lines(content, lines);	//파일을 읽어와 lines에 저장
+			
+			Language* tmp;
+			
+			if((index = Language::find_lang_instance_exists(lang)) != -1)
+				tmp = cloc_langs[index];
+			else
+				tmp = new Language(lang);
+			
+			tmp->set_files(tmp->get_files() + 1);
+			
+			if(index == -1){
+				cloc_langs.push_back(tmp);
+			}
+			
+			for(const std::string s : lines){	//lines에 저장된 line을 분석
+				Language::parse_line(entry.path(), s, multi_line_comments, tmp);
+			}
 		}
 		
-		
-		for(const std::string s : lines){
-			Language::parse_line(entry.path(), s);
-		}
 	}
 	
 	return true;

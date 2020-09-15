@@ -17,7 +17,7 @@ extern std::vector<Language*> cloc_langs;
 //결과 출력함수
 void Language::print_output(int text_files, int files_ignored){
 	printf("%d text files\n", text_files);
-	printf("%d filse ignored\n", files_ignored);
+	printf("%d files ignored\n", files_ignored);
 	printf("----------------------------------------------------------\n");
 	printf("Language%20s%10s%10s%10s\n", "files", "blank", "comment", "code");
 	printf("----------------------------------------------------------\n");
@@ -49,19 +49,21 @@ void Language::print_output(int text_files, int files_ignored){
 }
 
 std::string Language::find_lang(std::string ext){
+	//std::cout << ext << std::endl;
 	for(int i=0 ; i<159 ; i++){
 		for(int j=0 ; j<10 ; j++){
 			if(Langs_exts[i][j].empty())
 				break;
-			if(ext == Langs_exts[i][j])
+			if(ext == Langs_exts[i][j]){
 				return Langs[i];
+			}
 		}
 	}
 	
 	return "";
 }
 
-int Language::find_lang_instace_exsits(std::string lang){
+int Language::find_lang_instance_exists(std::string lang){
 	for(unsigned int i=0 ; i<cloc_langs.size() ; i++){
 		if(lang == cloc_langs[i]->get_language_name())
 			return i;
@@ -69,37 +71,31 @@ int Language::find_lang_instace_exsits(std::string lang){
 	return -1;
 }
 
-void Language::parse_line(fs::path p, std::string content){
-	std::string lang = find_lang(p.extension().string().substr(1));
-	int index1;
+void Language::parse_line(fs::path p, std::string content, bool& multi_line_comments, Language*& tmp){
 	int index2;
-	
-	if(lang.empty()){
-		return;	
-	}
-
-	Language* tmp;
-	
-	if((index1 = find_lang_instace_exsits(lang)) != -1)
-		tmp = cloc_langs[index1];
-	else
-		tmp = new Language(lang);
-	
-	tmp->set_files(tmp->get_files() + 1);
 	
 	if(content == "\n")
 		tmp->set_blank(tmp->get_blank() + 1);
-	else if((index2 = content.find("//")) != -1){
+	else if((index2 = content.find("//")) != -1){	//한줄 주석
 		if(content.substr(0, index2-1).empty())
 			tmp->set_comment(tmp->get_comment() + 1);
 		else
 			tmp->set_code(tmp->get_code() + 1);
 	}
-	else{
-		tmp->set_code(tmp->get_code() + 1);
+	else if((index2 = content.find("/*")) != -1){	//여러줄 주석 시작
+		tmp->set_comment(tmp->get_comment() + 1);
+		multi_line_comments = true;
 	}
-	if(index1 == -1)
-		cloc_langs.push_back(tmp);
+	else if((index2 = content.find("*/")) != -1){
+		tmp->set_comment(tmp->get_comment() + 1);
+		multi_line_comments = false;
+	}
+	else{
+		if(multi_line_comments)
+			tmp->set_comment(tmp->get_comment() + 1);
+		else
+			tmp->set_code(tmp->get_code() + 1);
+	}
 	
 	return;
 }

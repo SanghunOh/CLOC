@@ -48,3 +48,8 @@ std::string Langs_exts[][11] = {
     {"component"},{"page"},{"mc"},{"def"},{"rc", "rc2"},{"wxi"},{"wxs"},{"wxl"},{"xaml"},{"prg"},
     {"ch"},{"XML", "xml"},{"xq", "xquery"},{"xsd", "XSD"},{"xsl", "XSL", "xslt", "XSLT"},{"y"},{"yaml", "yml"},
 };
+
+std::string comment[][3] = {
+    {"\"", "", ""}, {"//", "/*", "*/"}, {"", "<!--", "-->"}, {"", "<%--", "-->"}, {"#", "\"\"\"", "\"\"\""},
+    
+};

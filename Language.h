@@ -61,8 +61,8 @@ public:
 	
 	static void print_output(int, int);
 	static void parse_string_by_lines(std::string, std::vector<std::string>&);
-	static void parse_line(fs::path, std::string);
-	static int find_lang_instace_exsits(std::string lang);
+	static void parse_line(fs::path, std::string, bool&, Language*&);
+	static int find_lang_instance_exists(std::string lang);
 	static std::string find_lang(std::string);
 };
 
